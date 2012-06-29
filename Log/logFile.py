@@ -1,4 +1,4 @@
-# -*- coding: uutf8 -*-
+# -*- coding: utf8 -*-
 """
   Modulo que crea y gestiona el fichero de log
   

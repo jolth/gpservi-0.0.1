@@ -35,7 +35,6 @@ class DaemonUDP:
         self.buffering = buffering
         self.server = None
         self.running = 1
-
         self.thread = None
 
 
@@ -56,9 +55,21 @@ class DaemonUDP:
             threading 
         """
         while self.running:
-            data, address = self.server.recvfrom(self.buffering)
-            self.thread = threading.Thread(target=self.threads, args=(data, address, self.__class__.lock, ))
-            self.thread.start()
+            try:
+                data, address = self.server.recvfrom(self.buffering)
+                self.thread = threading.Thread(target=self.threads, args=(data, address, self.__class__.lock, ))
+                self.thread.start()
+            except KeyboardInterrupt: 
+                sys.stderr.write("Exit, KeyboardInterrupt\n")
+                try:
+                    print("Exit App...")
+                    self.server.close()
+                    self.thread.join() # Esperamos hasta que se termine la ejecución de los hilos
+                                       # activos, para terminar la ejecución del programa.
+                except AttributeError, NameError: pass
+
+                break # Salimos del bucle principal
+
 
 
     def threads(self, data, address, lock):
@@ -66,7 +77,6 @@ class DaemonUDP:
             run thread
         """
         import time, random
-        #print "Data: " + data, "ADDR: " + address, "Nombre Hilo: " + self.server.getName(), "Lock: " + lock
         print "Data: " + data, "Nombre Hilo: " + self.thread.getName(), "Lock: " + str(lock)
         print "Hilo actual: ", threading.currentThread()
         print "Hilos presentes:",  threading.enumerate()

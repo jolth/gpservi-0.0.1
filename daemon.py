@@ -19,7 +19,8 @@
 import sys
 import socket
 import threading
-
+from Log.logFile import createLogFile, logFile
+from Load.loadconfig import load
 
 class DaemonUDP:
     """
@@ -35,33 +36,38 @@ class DaemonUDP:
         self.buffering = buffering
         self.server = None
         self.running = 1
-
         self.thread = None
 
 
     def start(self):
-        try:
-            self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.server.bind((self.host, self.port))
-            print ("Server run %s:%s" % (self.host, self.port))
-        except socket.error, (value, message):
-            if self.server:
-                self.server.close()
-            print "Could not open socket:", message 
-            sys.exit(1)
+        """
+            Prepara el servidor 
+        """
+
+        if createLogFile(str(load('FILELOG', 'FILE'))): # Creamos el fichero de Log
+            try:
+                self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Creamos el Socket Server 
+                self.server.bind((self.host, self.port))
+                print ("Server run %s:%s" % (self.host, self.port))
+            except socket.error, (value, message):
+                if self.server:
+                    self.server.close()
+                print "Could not open socket:", message 
+                sys.exit(1)
 
         
     def run(self):
         """ 
             threading 
         """
+        # Bucle Principal
         while self.running:
             try:
-                data, address = self.server.recvfrom(self.buffering)
+                data, address = self.server.recvfrom(self.buffering) # Esperamos por un cliente UDP
                 self.thread = threading.Thread(target=self.threads, args=(data, address, self.__class__.lock, ))
                 self.thread.start()
             except KeyboardInterrupt: 
-                sys.stderr.write("Exit, KeyboardInterrupt\n")
+                sys.stderr.write("\rExit, KeyboardInterrupt\n")
                 try:
                     print("Exit App...")
                     self.server.close()
@@ -78,12 +84,19 @@ class DaemonUDP:
             run thread
         """
         import time, random
-        #print "Data: " + data, "ADDR: " + address, "Nombre Hilo: " + self.server.getName(), "Lock: " + lock
-        print "Data: " + data, "Nombre Hilo: " + self.thread.getName(), "Lock: " + str(lock)
-        print "Hilo actual: ", threading.currentThread()
-        print "Hilos presentes:",  threading.enumerate()
+            
+        # Fichero de Log
+        lock.acquire(True)
+        self.__class__.endfile = logFile(str(load('FILELOG', 'FILE')),
+                                         self.__class__.endfile,
+                                         address=address, data=data, 
+                                        )
+        lock.release()
+        # End Fichero de Log
 
         time.sleep(random.randint(1, 10))
+
+
 
 
 class DaemonTCP:
