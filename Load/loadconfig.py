@@ -4,6 +4,11 @@
   Author: Jorge A. Toro
   Date: 02-02-2012
   
+  Usage: 
+    from Load.loadconfig import load
+    load('MODULES', 'GpsIP')
+    load('DAEMON', 'DAEMONHost')
+
 """
 
 import sys

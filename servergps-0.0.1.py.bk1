@@ -1,0 +1,20 @@
+# -*- coding: UTF-8 -*-
+"""
+    Server GPS
+
+    Autor: Jorge A. Toro [jolthgs@gmail.com]
+"""
+import socket
+#from Load.loadconfig import *
+from Load.loadconfig import load
+
+#print("El fichero de modulos es: %s" % load('MODULES', 'GpsIP'))
+
+
+class DaemonUDP:
+    """
+        Server UDP
+
+    """
+    def __init__(self, host, port, buffering):
+
