@@ -4,7 +4,7 @@
 
     Autor: Jorge A. Toro [jolthgs@gmail.com]
 
-    usage:
+    Usage:
     >>> import daemon
     >>> d = daemon.DaemonUDP('', 50007, 256)
     >>> d.start()
@@ -34,9 +34,9 @@ class DaemonUDP:
         self.host = host
         self.port = port
         self.buffering = buffering
-        self.server = None
-        self.running = 1
-        self.thread = None
+        self.server = None # Servidor UDP activo 
+        self.running = 1 
+        self.thread = None # Hilo actual de la instacia del objeto daemon
 
 
     def start(self):
@@ -69,10 +69,11 @@ class DaemonUDP:
             except KeyboardInterrupt: 
                 sys.stderr.write("\rExit, KeyboardInterrupt\n")
                 try:
-                    print("Exit App...")
+                    sys.stdout.write("Exit App... \n")
                     self.server.close()
                     self.thread.join() # Esperamos hasta que se termine la ejecución de los hilos
                                        # activos, para terminar la ejecución del programa.
+                    raise SystemExit("Se terminaron de ejecutar todos los dispositivos activos en el servidor")
                 except AttributeError, NameError: pass
 
                 break # Salimos del bucle principal

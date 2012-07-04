@@ -21,11 +21,13 @@ def createLogFile(arch):
             print >> f, 'ID'.center(8), 'IP,Port'.center(24), \
             'Date'.center(12), 'Time'.center(10), \
             'Event'.center(9), 'Latitude'.center(10), \
-            'Longitude'.center(12), 'Geocoding'.center(36)
+            'Longitude'.center(12), 'Geocoding'.center(36), \
+            'Data'.center(62)
             print >> f, ('-'*6).ljust(8), ('-'*22).ljust(24), \
             ('-'*10).ljust(14), ('-'*8).ljust(10), \
             ('-'*6).ljust(6), ('-'*10).ljust(11), \
-            ('-'*10).ljust(12), ('-'*34).ljust(36) 
+            ('-'*10).ljust(12), ('-'*34).ljust(36), \
+            ('-'*60).ljust(62)
     return True
 
         
@@ -41,7 +43,6 @@ def logFile(arch, endFile=0, **data):
 
     """
     import time
-    #self.lock.acquire(True)
     with open(arch, 'a+') as f:
         f.seek(endFile)
         print >> f, ('None').ljust(8), \
@@ -49,9 +50,9 @@ def logFile(arch, endFile=0, **data):
         (time.strftime('%D')).ljust(12), \
         (time.strftime("%H:%M:%S")).ljust(10), \
         ('None').ljust(6), ('None').ljust(11), \
-        ('None').ljust(12), ('None').ljust(36) 
+        ('None').ljust(12), ('None').ljust(36), \
+        (("%(data)s" % data)[:-1]).ljust(62)
 
         endFile = f.tell() 
-    #self.lock.release()
     return endFile
 
