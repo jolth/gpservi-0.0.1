@@ -84,29 +84,18 @@ class DaemonUDP:
         """
             run thread
         """
-        #import Devices
-        import Devices.devices    
-
-        print "Data: " + data, "Nombre Hilo: " + self.thread.getName(), "Lock: " + str(lock)
-        print "Hilo actual: ", threading.currentThread()
-        print "Hilos presentes:",  threading.enumerate()
-        
-        # Parse Devices
-        rawData = Devices.devices.getTypeClass(data, address) # retorna la data analizada en un diccionario
-        
-        if not rawData.has_key('id'): # Si la trama no tiene ID 
-            print rawData,"\n"
-            return
-
+        import time, random
+            
         # Fichero de Log
         lock.acquire(True)
         self.__class__.endfile = logFile(str(load('FILELOG', 'FILE')),
                                          self.__class__.endfile,
-                                         raw=rawData 
+                                         address=address, data=data, 
                                         )
         lock.release()
         # End Fichero de Log
 
+        time.sleep(random.randint(1, 10))
 
 
 

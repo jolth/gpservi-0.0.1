@@ -4,6 +4,7 @@
 import sys
 import StringIO
 from UserDict import UserDict
+from Gps.Antares.convert import latWgs84ToDecimal, lngWgs84ToDecimal
 
 
 def tagData(dFile, position, bit=None, seek=0):
@@ -23,30 +24,31 @@ def tagData(dFile, position, bit=None, seek=0):
 # Clase que actua como un diccionario
 class Device(UserDict):
     """ Store Device"""
-    def __init__(self, deviceData=None):
+    def __init__(self, deviceData=None, address=None):
         UserDict.__init__(self)
         self["data"] = deviceData
+        self["address"] = address
 
 
 class ANTDevice(Device):
     """
         Dispositivo Antares
     """
-    tagDataANT = {  # (position, bit, seek, function)
+    tagDataANT = {  # (position, bit, seek, function_tagData, function_convert )
                     #"id"        : (-6, 6, 2, tagData)#, # ID de la unidad
-                    "id"        : (-6, None, 2, tagData), # ID de la unidad
-                    "type"      : (0, 1, 0, tagData),
-                    "typeEvent" : (1, 2, 0, tagData),     # 
-                    "codEvent"  : (3, 2, 0, tagData),     # Codigo de evento activado (en Antares de 00 a 49, en e.Track de 00 a 99)
-                    "weeks"     : (5, 4, 0, tagData),     # Es el numero de semanas desde 00:00AM del 6 de enero de 1980.
-                    "dayWeek"   : (9, 1, 0, tagData),     # 0=Domingo, 1=Lunes, etc hasta 6=sabado.
-                    "time"      : (10, 5, 0, tagData),    # Hora expresada en segundos desde 00:00:00AM
-                    "lat"       : (15, 8, 0, tagData),    # Latitud
-                    "lng"       : (23, 9, 0, tagData),    # Longitud
-                    "speed"     : (-18, 3, 2, tagData),   # Velocidad en MPH
-                    "course"    : (-15, 3, 2, tagData),   # Curso en grados
-                    "gpsSource" : (-12, 1, 2, tagData),   # Fuente GPS. Puede ser 0=2D GPS, 1=3D GPS, 2=2D DGPS, 3=3D DGPS, 6=DR, 8=Degraded DR.     
-                    "ageData"   : (-11, 1, 2, tagData)    # Edad del dato. Puede ser 0=No disponible, 1=viejo (10 segundos) ó 2=Fresco (menor a 10 segundos)
+                    "id"        : (-6, None, 2, tagData, None), # ID de la unidad
+                    "type"      : (0, 1, 0, tagData, None),
+                    "typeEvent" : (1, 2, 0, tagData, None),     # 
+                    "codEvent"  : (3, 2, 0, tagData, None),     # Codigo de evento activado (en Antares de 00 a 49, en e.Track de 00 a 99)
+                    "weeks"     : (5, 4, 0, tagData, None),     # Es el numero de semanas desde 00:00AM del 6 de enero de 1980.
+                    "dayWeek"   : (9, 1, 0, tagData, None),     # 0=Domingo, 1=Lunes, etc hasta 6=sabado.
+                    "time"      : (10, 5, 0, tagData, None),    # Hora expresada en segundos desde 00:00:00AM
+                    "lat"       : (15, 8, 0, tagData, latWgs84ToDecimal),    # Latitud
+                    "lng"       : (23, 9, 0, tagData, lngWgs84ToDecimal),    # Longitud
+                    "speed"     : (-18, 3, 2, tagData, None),   # Velocidad en MPH
+                    "course"    : (-15, 3, 2, tagData, None),   # Curso en grados
+                    "gpsSource" : (-12, 1, 2, tagData, None),   # Fuente GPS. Puede ser 0=2D GPS, 1=3D GPS, 2=2D DGPS, 3=3D DGPS, 6=DR, 8=Degraded DR.     
+                    "ageData"   : (-11, 1, 2, tagData, None)    # Edad del dato. Puede ser 0=No disponible, 1=viejo (10 segundos) ó 2=Fresco (menor a 10 segundos)
                  }
 
 
@@ -55,10 +57,10 @@ class ANTDevice(Device):
         try:
             dataFile = StringIO.StringIO(data[1:-1])
             #
-            for tag, (position, bit, seek, parseFunc) in self.tagDataANT.items():
-                self[tag] = parseFunc(dataFile, position, bit, seek)
+            for tag, (position, bit, seek, parseFunc, convertFunc) in self.tagDataANT.items():
+                self[tag] = convertFunc and convertFunc(parseFunc(dataFile, position, bit, seek)) or parseFunc(dataFile, position, bit, seek)
 
-        except: sys.stderr.write('Error Inesperado:', sys.exc_info())
+        except: print(sys.exc_info()) #sys.stderr.write('Error Inesperado:', sys.exc_info())
         finally: dataFile.close()
 
 
@@ -117,7 +119,7 @@ def typeDevice(data):
 
 
 #
-def getTypeClass(data, module=sys.modules[Device.__module__]):
+def getTypeClass(data, address=None, module=sys.modules[Device.__module__]):
     """
         Determina que clase debe manejar un determinado dispositivo y
         retorna un diccionario con la trama procesada.
@@ -154,6 +156,12 @@ def getTypeClass(data, module=sys.modules[Device.__module__]):
             id=ANT001
             >>> 
     """
+    import re
+
+    #data = data.replace('\n','')
+    #data = data.strip('\n')
+    data = re.sub(r"[\r\n]+", "", data)
+
     # Determinamos la clase manejadora adecuado según el dispositivo
     dev = "%sDevice" % typeDevice(data)
 
@@ -172,6 +180,7 @@ def getTypeClass(data, module=sys.modules[Device.__module__]):
         """
         return hasattr(module, dev) and getattr(module, dev) or Device
 
-    return getClass(module, dev)(data)
+    return getClass(module, dev)(data, address)
+
      
 

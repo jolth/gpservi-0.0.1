@@ -40,25 +40,18 @@ def logFile(arch, endFile=0, **data):
 
        usage:
        logFile('/tmp/log', final_buffer, foo1='data', foo2='data', ...)
-       logFile('/tmp/log', final_buffer, foo='data', {'foo1':'data', 'foo2':'data', ...})
 
     """
     import time
-    #import sys
-    #print "PATH:", sys.path
-    #print "Exite ID: ", data['raw'].has_key('id')
-
     with open(arch, 'a+') as f:
         f.seek(endFile)
-        print >> f, ("%(id)s" % data['raw']).ljust(8), \
-        ("%(address)s" % data['raw']).ljust(26), \
+        print >> f, ('None').ljust(8), \
+        (repr("%(address)s" % data)).ljust(26), \
         (time.strftime('%D')).ljust(12), \
         (time.strftime("%H:%M:%S")).ljust(10), \
-        ("%(codEvent)s" % data['raw']).ljust(6), \
-        ("%(lat)s" % data['raw']).ljust(11), \
-        ("%(lng)s" % data['raw']).ljust(12), \
-        ('None').ljust(36), \
-        ("%(data)s" % data['raw']).ljust(62)
+        ('None').ljust(6), ('None').ljust(11), \
+        ('None').ljust(12), ('None').ljust(36), \
+        (("%(data)s" % data)[:-1]).ljust(62)
 
         endFile = f.tell() 
     return endFile
