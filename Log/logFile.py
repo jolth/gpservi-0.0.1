@@ -44,9 +44,6 @@ def logFile(arch, endFile=0, **data):
 
     """
     import time
-    #import sys
-    #print "PATH:", sys.path
-    #print "Exite ID: ", data['raw'].has_key('id')
 
     with open(arch, 'a+') as f:
         f.seek(endFile)
