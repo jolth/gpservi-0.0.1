@@ -5,6 +5,9 @@ import sys
 import StringIO
 from UserDict import UserDict
 from Gps.Antares.convert import latWgs84ToDecimal, lngWgs84ToDecimal
+from Gps.common import MphToKph
+import simplejson as json
+import Location.geomapgoogle
 
 
 def tagData(dFile, position, bit=None, seek=0):
@@ -28,6 +31,7 @@ class Device(UserDict):
         UserDict.__init__(self)
         self["data"] = deviceData
         self["address"] = address
+        #self["geocoding"] = None
 
 
 class ANTDevice(Device):
@@ -45,7 +49,7 @@ class ANTDevice(Device):
                     "time"      : (10, 5, 0, tagData, None),    # Hora expresada en segundos desde 00:00:00AM
                     "lat"       : (15, 8, 0, tagData, latWgs84ToDecimal),    # Latitud
                     "lng"       : (23, 9, 0, tagData, lngWgs84ToDecimal),    # Longitud
-                    "speed"     : (-18, 3, 2, tagData, None),   # Velocidad en MPH
+                    "speed"     : (-18, 3, 2, tagData, MphToKph),   # Velocidad en MPH
                     "course"    : (-15, 3, 2, tagData, None),   # Curso en grados
                     "gpsSource" : (-12, 1, 2, tagData, None),   # Fuente GPS. Puede ser 0=2D GPS, 1=3D GPS, 2=2D DGPS, 3=3D DGPS, 6=DR, 8=Degraded DR.     
                     "ageData"   : (-11, 1, 2, tagData, None)    # Edad del dato. Puede ser 0=No disponible, 1=viejo (10 segundos) ó 2=Fresco (menor a 10 segundos)
@@ -55,10 +59,14 @@ class ANTDevice(Device):
     def __parse(self, data):
         self.clear()
         try:
-            dataFile = StringIO.StringIO(data[1:-1])
+            dataFile = StringIO.StringIO(data[1:-1]) # remove '<' y '>'
             #
             for tag, (position, bit, seek, parseFunc, convertFunc) in self.tagDataANT.items():
                 self[tag] = convertFunc and convertFunc(parseFunc(dataFile, position, bit, seek)) or parseFunc(dataFile, position, bit, seek)
+
+            # Realizamos la Geocodificación
+            #self["geocoding"] = self["lat"], self["lng"]
+            self["geocoding"] = json.loads(Location.geomapgoogle.regeocode('%s,%s' % (self["lat"], self["lng"])))[1]
 
         except: print(sys.exc_info()) #sys.stderr.write('Error Inesperado:', sys.exc_info())
         finally: dataFile.close()

@@ -98,6 +98,8 @@ class DaemonUDP:
             print rawData,"\n"
             return
 
+        print rawData # print de Prueba
+
         # Fichero de Log
         lock.acquire(True)
         self.__class__.endfile = logFile(str(load('FILELOG', 'FILE')),

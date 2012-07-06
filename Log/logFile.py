@@ -54,7 +54,7 @@ def logFile(arch, endFile=0, **data):
         ("%(codEvent)s" % data['raw']).ljust(6), \
         ("%(lat)s" % data['raw']).ljust(11), \
         ("%(lng)s" % data['raw']).ljust(12), \
-        ('None').ljust(36), \
+        ("%(geocoding)s" % data['raw']).ljust(36), \
         ("%(data)s" % data['raw']).ljust(62)
 
         endFile = f.tell() 
