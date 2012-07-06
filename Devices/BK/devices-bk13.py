@@ -6,7 +6,7 @@ import StringIO
 from UserDict import UserDict
 
 
-def tagData(dFile, position, bit=None, seek=0):
+def tagData(dFile, position, bit, seek=0):
     """
         Toma un punto de partida (position), cantidad de bit y un punto de 
         referencia para leer los bit(según el método seek() de los fichero).
@@ -32,28 +32,15 @@ class ANTDevice(Device):
     """
         Dispositivo Antares
     """
-    tagDataANT = {  # (position, bit, seek, function)
-                    #"id"        : (-6, 6, 2, tagData)#, # ID de la unidad
-                    "id"        : (-6, None, 2, tagData), # ID de la unidad
-                    "type"      : (0, 1, 0, tagData),
-                    "typeEvent" : (1, 2, 0, tagData),     # 
-                    "codEvent"  : (3, 2, 0, tagData),     # Codigo de evento activado (en Antares de 00 a 49, en e.Track de 00 a 99)
-                    "weeks"     : (5, 4, 0, tagData),     # Es el numero de semanas desde 00:00AM del 6 de enero de 1980.
-                    "dayWeek"   : (9, 1, 0, tagData),     # 0=Domingo, 1=Lunes, etc hasta 6=sabado.
-                    "time"      : (10, 5, 0, tagData),    # Hora expresada en segundos desde 00:00:00AM
-                    "lat"       : (15, 8, 0, tagData),    # Latitud
-                    "lng"       : (23, 9, 0, tagData),    # Longitud
-                    "speed"     : (-18, 3, 2, tagData),   # Velocidad en MPH
-                    "course"    : (-15, 3, 2, tagData),   # Curso en grados
-                    "gpsSource" : (-12, 1, 2, tagData),   # Fuente GPS. Puede ser 0=2D GPS, 1=3D GPS, 2=2D DGPS, 3=3D DGPS, 6=DR, 8=Degraded DR.     
-                    "ageData"   : (-11, 1, 2, tagData)    # Edad del dato. Puede ser 0=No disponible, 1=viejo (10 segundos) ó 2=Fresco (menor a 10 segundos)
+    tagDataANT = {   # (position, bit, seek, function)
+                    "id" : ( -7, 6, 2, tagData)
                  }
 
 
     def __parse(self, data):
         self.clear()
         try:
-            dataFile = StringIO.StringIO(data[1:-1])
+            dataFile = StringIO.StringIO(data)
             #
             for tag, (position, bit, seek, parseFunc) in self.tagDataANT.items():
                 self[tag] = parseFunc(dataFile, position, bit, seek)
@@ -124,35 +111,16 @@ def getTypeClass(data, module=sys.modules[Device.__module__]):
 
         Recibe la data enviada por el dispositivo (data), y opcionalmente 
         el nombre del módulo donde se encuentra la clase que manipula este 
-        tipo de dispositivo (module). La clase manejador debe tener un 
-        formato compuesto por 'TIPO_DISPOSITIVO + Device' por ejemplo: ANTDevice,
-        SKPDevice, etc.
+        tipo de dispositivo (module).
 
         Usage:
             >>> import devices
             >>> 
-            >>> data='>REV001447147509+2578250-0802813901519512;ID=ANT001<'
+            >>> data='>REV041674684322+0481126-0757378200000012;ID=ANT001<'
             >>> devices.getTypeClass(data)
-            {'codEvent': '00', 'weeks': '1447', 'dayWeek': '1', 'ageData': '2', \
-            'type': 'R', 'data': '>REV001447147509+2578250-0802813901519512;ID=ANT001<', \
-            'course': '195', 'gpsSource': '1', 'time': '47509', 'lat': '+2578250', \
-            'typeEvent': 'EV', 'lng': '-08028139', 'speed': '015', 'id': 'ANT001'}
-            >>> print "\n".join(["%s=%s" % (key,value) for key, value in devices.getTypeClass(data).items()])
-            codEvent=00
-            weeks=1447
-            dayWeek=1
-            ageData=2
-            type=R
-            data=>REV001447147509+2578250-0802813901519512;ID=ANT001<
-            course=195
-            gpsSource=1
-            time=47509
-            lat=+2578250
-            typeEvent=EV
-            lng=-08028139
-            speed=015
-            id=ANT001
+            {'data': '>REV041674684322+0481126-0757378200000012;ID=ANT001<', 'id': 'ANT001'}
             >>> 
+
     """
     # Determinamos la clase manejadora adecuado según el dispositivo
     dev = "%sDevice" % typeDevice(data)
