@@ -64,8 +64,8 @@ class ANTDevice(Device):
             for tag, (position, bit, seek, parseFunc, convertFunc) in self.tagDataANT.items():
                 self[tag] = convertFunc and convertFunc(parseFunc(dataFile, position, bit, seek)) or parseFunc(dataFile, position, bit, seek)
 
-            # Realizamos la Geocodificación
-            #self["geocoding"] = self["lat"], self["lng"]
+            # Realizamos la Geocodificación. Tratar de no hacer esto
+            # es mejor que se realize por cada cliente con la API de GoogleMap
             self["geocoding"] = json.loads(Location.geomapgoogle.regeocode('%s,%s' % (self["lat"], self["lng"])))[1]
 
         except: print(sys.exc_info()) #sys.stderr.write('Error Inesperado:', sys.exc_info())
